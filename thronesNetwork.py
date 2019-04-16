@@ -42,7 +42,7 @@ def removeEdges():
     remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 2]
     print(remove)
 
-
+# print DF for each kind of centrality
 def printTopTenByCenterality():
     global graph
     topTenDF=[]
@@ -71,38 +71,47 @@ def printTopTenByCenterality():
     df=pd.DataFrame.from_dict(topTen4, orient='index', columns=['Centrality'])
     print(df)
 
+# TODO-intersection between types of centraluty
 def intersectionTop(dicts):
     ld=dicts
     res = list(reduce(lambda x, y: x & y.keys(), ld))
     print(res)
     # print the intersection between all top10 lists
 
+# TODO find different types of communities and compare
 def findCommunity():
     global graph
     gn_comm=girvan_newman(graph)
     first_iteration_comm=tuple(sorted(c) for c in next(gn_comm))
     print(dict(enumerate(first_iteration_comm)))
 
+# top 10 predictions to link - jaccard
 def linkPredictionJaccard():
     global graph
     preds_jc = nx.jaccard_coefficient(graph)
     pred_jc_dict = {}
     for u, v, p in preds_jc:
         pred_jc_dict[(u, v)] = p
-    print(sorted(pred_jc_dict.items(), key=lambda x: x[1], reverse=True)[:5])
+    print(sorted(pred_jc_dict.items(), key=lambda x: x[1], reverse=True)[:10])
 
+# top 10 predictions to link - adamic
 def linkPredictionAdamic():
+    global graph
     preds_aa = nx.adamic_adar_index(graph)
     pred_aa_dict = {}
     for u, v, p in preds_aa:
         pred_aa_dict[(u, v)] = p
-    print(sorted(pred_aa_dict.items(), key=lambda x: x[1], reverse=True)[:5])
+    print(sorted(pred_aa_dict.items(), key=lambda x: x[1], reverse=True)[:10])
 
+# main
 def main():
     csvToGraph()
-    # removeEdges()
-    printGraphParams()
-    printTopTenByCenterality()
-    findCommunity()
+    # # removeEdges()
+    # printGraphParams()
+    # printTopTenByCenterality()
+    # findCommunity()
+    linkPredictionAdamic()
+    linkPredictionJaccard()
+
 
 main()
