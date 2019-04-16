@@ -71,13 +71,32 @@ def printTopTenByCenterality():
     df=pd.DataFrame.from_dict(topTen4, orient='index', columns=['Centrality'])
     print(df)
 
-def intersectionTop():
+def intersectionTop(dicts):
+    ld=dicts
     res = list(reduce(lambda x, y: x & y.keys(), ld))
+    print(res)
+    # print the intersection between all top10 lists
 
 def findCommunity():
     global graph
     gn_comm=girvan_newman(graph)
-    
+    first_iteration_comm=tuple(sorted(c) for c in next(gn_comm))
+    print(dict(enumerate(first_iteration_comm)))
+
+def linkPredictionJaccard():
+    global graph
+    preds_jc = nx.jaccard_coefficient(graph)
+    pred_jc_dict = {}
+    for u, v, p in preds_jc:
+        pred_jc_dict[(u, v)] = p
+    print(sorted(pred_jc_dict.items(), key=lambda x: x[1], reverse=True)[:5])
+
+def linkPredictionAdamic():
+    preds_aa = nx.adamic_adar_index(graph)
+    pred_aa_dict = {}
+    for u, v, p in preds_aa:
+        pred_aa_dict[(u, v)] = p
+    print(sorted(pred_aa_dict.items(), key=lambda x: x[1], reverse=True)[:5])
 
 def main():
     csvToGraph()
