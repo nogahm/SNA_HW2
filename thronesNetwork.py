@@ -11,14 +11,27 @@ graph={}
 # read csv file into graph
 def csvToGraph():
     global graph
-    Data = open('thrones-network.csv', "r")
-    next(Data, None)  # skip the first line in the input file
-    Graphtype = nx.Graph()
-    graph = nx.parse_edgelist(Data, delimiter=',', create_using=Graphtype,data=(('Weight', float),))
+    # Data = open('thrones-network.csv', "r")
+    # next(Data, None)  # skip the first line in the input file
+    # Graphtype = nx.Graph()
+    # graph = nx.parse_edgelist(Data, delimiter=',', create_using=Graphtype,data=(('Weight', float),))
+    Data=pd.read_csv('thrones-network.csv')
+    graph=nx.from_pandas_edgelist(Data,source='Node A', target='Node B', edge_attr='Weight')
+    graph=nx.to_undirected(graph)
+    graph=nx.Graph(graph)
+    print(graph)
+
+# remove edges with weight<5
+def removeEdges():
+    global graph
+    remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 5]
+    remove_list=[remove[i][0] for i in range(len(remove))]
+    graph.remove_edges_from(remove_list)
+    print(remove_list)
 
 def printGraphParams():
     print(nx.info(graph))
-    # print clustering coefficient
+    # print clustering coefficient - TODO: Not sure its needed
     print('clustring coefficient is:', nx.clustering(graph))
     # print average clustering coefficient
     print('average clustring coefficient is:', nx.average_clustering(graph))
@@ -36,12 +49,6 @@ def printGraphParams():
     # average path length
     print('average path length is: ', nx.average_shortest_path_length(graph))
 
-# TODO-remove edges with weight = 1
-def removeEdges():
-    global graph
-    remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 2]
-    print(remove)
-
 # print DF for each kind of centrality
 def printTopTenByCenterality():
     global graph
@@ -49,26 +56,30 @@ def printTopTenByCenterality():
     # degree centerality
     result=nx.degree_centrality(graph)
     topTen1 = dict(sorted(result.items(), key=lambda t: t[1], reverse=True)[:10])
-    print('degree centerality top ten:')
-    df=pd.DataFrame.from_dict(topTen1, orient='index', columns=['Centrality'])
+    print('degree centrality top ten:')
+    df=pd.DataFrame.from_dict(topTen1, orient='index')
+    df.columns=['Centrality']
     print(df)
     # eigenvector centrality
     result=nx.eigenvector_centrality(graph)
     topTen2 = dict(sorted(result.items(), key=lambda t: t[1], reverse=True)[:10])
-    print('eigenvector centerality top ten:')
-    df=pd.DataFrame.from_dict(topTen2, orient='index', columns=['Centrality'])
+    print('eigenvector centrality top ten:')
+    df=pd.DataFrame.from_dict(topTen2, orient='index')
+    df.columns=['Centrality']
     print(df)
     # betweenness centrality
     result = nx.betweenness_centrality(graph)
     topTen3 = dict(sorted(result.items(), key=lambda t: t[1], reverse=True)[:10])
-    print('betweenness centerality top ten:')
-    df=pd.DataFrame.from_dict(topTen3, orient='index', columns=['Centrality'])
+    print('betweenness centrality top ten:')
+    df=pd.DataFrame.from_dict(topTen3, orient='index')
+    df.columns=['Centrality']
     print(df)
     # closeness centrality
     result = nx.closeness_centrality(graph)
     topTen4 = dict(sorted(result.items(), key=lambda t: t[1], reverse=True)[:10])
-    print('closeness centerality top ten:')
-    df=pd.DataFrame.from_dict(topTen4, orient='index', columns=['Centrality'])
+    print('closeness centrality top ten:')
+    df=pd.DataFrame.from_dict(topTen4, orient='index')
+    df.columns=['Centrality']
     print(df)
 
 # TODO-intersection between types of centraluty
@@ -106,10 +117,10 @@ def linkPredictionAdamic():
 # main
 def main():
     csvToGraph()
-    # # removeEdges()
-    # printGraphParams()
-    # printTopTenByCenterality()
-    # findCommunity()
+    # removeEdges()
+    printGraphParams()
+    printTopTenByCenterality()
+    findCommunity()
     linkPredictionAdamic()
     linkPredictionJaccard()
 
