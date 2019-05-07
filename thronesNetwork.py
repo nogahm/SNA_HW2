@@ -27,12 +27,13 @@ def removeEdges():
     remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 5]
     remove_list=[remove[i][0] for i in range(len(remove))]
     graph.remove_edges_from(remove_list)
-    print(remove_list)
+    # remove nodes with no edge
+    graph.remove_nodes_from(list(nx.isolates(graph)))
+    nx.draw_spring(graph, with_labels=True)
+    plt.show()
 
 def printGraphParams():
     print(nx.info(graph))
-    # print clustering coefficient - TODO: Not sure its needed
-    print('clustring coefficient is:', nx.clustering(graph))
     # print average clustering coefficient
     print('average clustring coefficient is:', nx.average_clustering(graph))
     # print density
@@ -82,19 +83,24 @@ def printTopTenByCenterality():
     df.columns=['Centrality']
     print(df)
 
-# TODO-intersection between types of centraluty
+    intersectionTop([topTen1, topTen2, topTen3, topTen4])
+
+# intersection between all types of centraluty
 def intersectionTop(dicts):
     ld=dicts
     res = list(reduce(lambda x, y: x & y.keys(), ld))
-    print(res)
+    print("The most central characters in all centrality types: ",str(res))
     # print the intersection between all top10 lists
 
-# TODO find different types of communities and compare
+# find communities
 def findCommunity():
     global graph
     gn_comm=girvan_newman(graph)
     first_iteration_comm=tuple(sorted(c) for c in next(gn_comm))
     print(dict(enumerate(first_iteration_comm)))
+
+    # nx.draw(graph)
+    # plt.show()
 
 # top 10 predictions to link - jaccard
 def linkPredictionJaccard():
@@ -114,12 +120,15 @@ def linkPredictionAdamic():
         pred_aa_dict[(u, v)] = p
     print(sorted(pred_aa_dict.items(), key=lambda x: x[1], reverse=True)[:10])
 
+
+
 # main
 def main():
     csvToGraph()
-    # removeEdges()
+    removeEdges()
     printGraphParams()
     printTopTenByCenterality()
+    # intersectionTop()
     findCommunity()
     linkPredictionAdamic()
     linkPredictionJaccard()
