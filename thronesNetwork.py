@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import community
 from functools import reduce
 from networkx.algorithms.community import girvan_newman
 import csv
@@ -11,26 +12,22 @@ graph={}
 # read csv file into graph
 def csvToGraph():
     global graph
-    # Data = open('thrones-network.csv', "r")
-    # next(Data, None)  # skip the first line in the input file
-    # Graphtype = nx.Graph()
-    # graph = nx.parse_edgelist(Data, delimiter=',', create_using=Graphtype,data=(('Weight', float),))
     Data=pd.read_csv('thrones-network.csv')
     graph=nx.from_pandas_edgelist(Data,source='Node A', target='Node B', edge_attr='Weight')
     graph=nx.to_undirected(graph)
     graph=nx.Graph(graph)
-    print(graph)
+    # print(graph)
 
 # remove edges with weight<5
 def removeEdges():
     global graph
-    remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 5]
+    remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 6]
     remove_list=[remove[i][0] for i in range(len(remove))]
     graph.remove_edges_from(remove_list)
     # remove nodes with no edge
     graph.remove_nodes_from(list(nx.isolates(graph)))
-    nx.draw_spring(graph, with_labels=True)
-    plt.show()
+    # nx.draw_spring(graph, with_labels=True)
+    # plt.show()
 
 def printGraphParams():
     print(nx.info(graph))
@@ -89,16 +86,31 @@ def printTopTenByCenterality():
 def intersectionTop(dicts):
     ld=dicts
     res = list(reduce(lambda x, y: x & y.keys(), ld))
-    print("The most central characters in all centrality types: ",str(res))
     # print the intersection between all top10 lists
+    print("The most central characters in all centrality types: ",str(res))
 
 # find communities
 def findCommunity():
     global graph
     gn_comm=girvan_newman(graph)
-    first_iteration_comm=tuple(sorted(c) for c in next(gn_comm))
-    print(dict(enumerate(first_iteration_comm)))
+    for i in range(0,2):
+        current=(tuple(sorted(c) for c in next(gn_comm)))
+        # print("partition "+ str(i))
+        # print(dict(enumerate(current)))
 
+    comm=tuple(sorted(c) for c in next(gn_comm))
+    d=dict(enumerate(comm))
+    print(d)
+
+    inverse = dict()
+    for key in d:
+        # Go through the list that is saved in the dict:
+        for item in d[key]:
+            # Check if in the inverted dict the key exists
+            inverse[item] = key
+    return inverse
+    # commDict=dict((v, k) for k, v in dict(enumerate(first_iteration_comm)).items().iteritems())
+    # return commDict
     # nx.draw(graph)
     # plt.show()
 
@@ -120,6 +132,26 @@ def linkPredictionAdamic():
         pred_aa_dict[(u, v)] = p
     print(sorted(pred_aa_dict.items(), key=lambda x: x[1], reverse=True)[:10])
 
+def drawGraphWithCommunitiesAndCentrality(comm):
+    global graph
+    # size by betweenes centrality
+    lower, upper = 100, 2000
+    temp = ({k:  v for k, v in nx.betweenness_centrality(graph).items()}).values()
+    node_size = [lower + (upper - lower) * x for x in temp]
+
+    # partition = community.best_partition(graph)  # compute communities
+    partition=comm
+    # nx.set_node_attributes(graph, 'node_color', list(partition.values()))
+    # nx.set_node_attributes(graph, 'node_size', node_size)
+
+    pos = nx.spring_layout(graph)  # compute graph layout
+    plt.figure(figsize=(10, 10))  # image is 10 x 10 inches
+    plt.axis('off')
+    plt.title("Games Of Thrones: Colored by community, Sized by betweennes centrality")
+    nx.draw_networkx_nodes(graph, pos, node_size=node_size, node_color=list(partition.values()))
+    nx.draw_networkx_edges(graph, pos, alpha=0.3)
+    nx.draw_networkx_labels(graph,pos, font_size =8, font_color ='grey')
+    plt.show(graph)
 
 
 # main
@@ -128,10 +160,11 @@ def main():
     removeEdges()
     printGraphParams()
     printTopTenByCenterality()
-    # intersectionTop()
-    findCommunity()
+    comm=findCommunity()
     linkPredictionAdamic()
     linkPredictionJaccard()
+    drawGraphWithCommunitiesAndCentrality(comm)
+
 
 
 main()
