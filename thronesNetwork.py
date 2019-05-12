@@ -1,7 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
-import community
+# import community
 from functools import reduce
 from networkx.algorithms.community import girvan_newman
 import csv
@@ -18,7 +18,7 @@ def csvToGraph():
     graph=nx.Graph(graph)
     # print(graph)
 
-# remove edges with weight<5
+# remove edges with weight<6
 def removeEdges():
     global graph
     remove = [edge for edge in graph.edges().items() if edge[1]['Weight'] < 6]
@@ -26,9 +26,8 @@ def removeEdges():
     graph.remove_edges_from(remove_list)
     # remove nodes with no edge
     graph.remove_nodes_from(list(nx.isolates(graph)))
-    # nx.draw_spring(graph, with_labels=True)
-    # plt.show()
 
+# print graph's parameters
 def printGraphParams():
     print(nx.info(graph))
     # print average clustering coefficient
@@ -99,20 +98,20 @@ def findCommunity():
         # print(dict(enumerate(current)))
 
     comm=tuple(sorted(c) for c in next(gn_comm))
+    for c in comm:
+        print(c)
+        subGraph=graph.subgraph(c)
+        print(nx.info(subGraph))
+        print("Density: ", nx.density(subGraph))
     d=dict(enumerate(comm))
-    print(d)
+    # print(d)
 
     inverse = dict()
     for key in d:
         # Go through the list that is saved in the dict:
         for item in d[key]:
-            # Check if in the inverted dict the key exists
             inverse[item] = key
     return inverse
-    # commDict=dict((v, k) for k, v in dict(enumerate(first_iteration_comm)).items().iteritems())
-    # return commDict
-    # nx.draw(graph)
-    # plt.show()
 
 # top 10 predictions to link - jaccard
 def linkPredictionJaccard():
@@ -134,16 +133,12 @@ def linkPredictionAdamic():
 
 def drawGraphWithCommunitiesAndCentrality(comm):
     global graph
-    # size by betweenes centrality
+    # size by betweenness centrality
     lower, upper = 100, 2000
     temp = ({k:  v for k, v in nx.betweenness_centrality(graph).items()}).values()
     node_size = [lower + (upper - lower) * x for x in temp]
 
-    # partition = community.best_partition(graph)  # compute communities
     partition=comm
-    # nx.set_node_attributes(graph, 'node_color', list(partition.values()))
-    # nx.set_node_attributes(graph, 'node_size', node_size)
-
     pos = nx.spring_layout(graph)  # compute graph layout
     plt.figure(figsize=(10, 10))  # image is 10 x 10 inches
     plt.axis('off')
